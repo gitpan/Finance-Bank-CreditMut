@@ -55,11 +55,14 @@ Account methods
     numbers.
 
   balance()
-    Returns the balance of the account. Currently, it returns an undefined
-    value.
+    Returns the balance of the account.
 
   statements()
     Return a list of Statement object (Finance::Bank::CreditMut::Statement).
+
+  currency()
+    Returns the currency of the account as a three letter ISO code (EUR,
+    CHF, etc.)
 
 Statement methods
   date()
@@ -70,7 +73,9 @@ Statement methods
 
   amount()
     Returns the amount of the statement (expressed in Euros or the account's
-    currency).
+    currency). Although the Crédit Mutuel website displays number in
+    continental format (i.e. with a coma as decimal separator), amount()
+    returns a real number.
 
   as_string($separator)
     Returns a tab-delimited representation of the statement. By default, it
@@ -82,7 +87,7 @@ COPYRIGHT
     can be redistributed under the same terms as Perl itself.
 
 AUTHOR
-    Cédric Bouvier <cbouvi@free.fr>
+    Cédric Bouvier <cbouvi@cpan.org>
 
     Thanks to Simon Cozens for releasing Finance::Bank::LloydsTSB and to
     Briac Pilpré for Finance::Bank::BNPParibas.

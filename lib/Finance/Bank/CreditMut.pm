@@ -2,9 +2,20 @@ package Finance::Bank::CreditMut;
 use strict;
 use Carp qw(carp croak);
 use WWW::Mechanize;
+use HTML::TableExtract;
 use vars qw($VERSION);
 
-$VERSION = 0.01;
+$VERSION = 0.02;
+
+# $Id: CreditMut.pm,v 1.2 2003/06/13 10:13:59 cbouvi Exp $
+# $Log: CreditMut.pm,v $
+# Revision 1.2  2003/06/13 10:13:59  cbouvi
+# Added retrieval of account balances.
+# Retrieval of account statements is now post-poned to the actual call to
+# method statements()
+# Added method currency() for accounts.
+# Added comments
+#
 
 =pod
 
@@ -34,29 +45,29 @@ Finance::Bank::CreditMut -  Check your Crédit Mutuel accounts from Perl
 
 =head1 DESCRIPTION
 
-This module provides a rudimentary interface to the CyberMut online
-banking system at L<https://www.creditmutuel.fr/>. You will need
-either Crypt::SSLeay or IO::Socket::SSL installed for HTTPS support
-to work with LWP.
+This module provides a rudimentary interface to the CyberMut online banking
+system at L<https://www.creditmutuel.fr/>. You will need either
+Crypt::SSLeay or IO::Socket::SSL installed for HTTPS support to work with
+LWP.
 
 The interface of this module is directly taken from Briac Pilpré's
 Finance::Bank::BNPParibas.
 
 =head1 WARNING
 
-This is code for B<online banking>, and that means B<your money>, and
-that means B<BE CAREFUL>. You are encouraged, nay, expected, to audit
-the source of this module yourself to reassure yourself that I am not
-doing anything untoward with your banking data. This software is useful
-to me, but is provided under B<NO GUARANTEE>, explicit or implied.
+This is code for B<online banking>, and that means B<your money>, and that
+means B<BE CAREFUL>. You are encouraged, nay, expected, to audit the source
+of this module yourself to reassure yourself that I am not doing anything
+untoward with your banking data. This software is useful to me, but is
+provided under B<NO GUARANTEE>, explicit or implied.
 
 =head1 METHODS
 
 =head2 check_balance( username => $username, password => $password, ua => $ua )
 
-Return a list of account (F::B::CM::Account) objects, one for each of
-your bank accounts. You can provide to this method a WWW::Mechanize
-object as third argument. If not, a new one will be created.
+Return a list of account (F::B::CM::Account) objects, one for each of your
+bank accounts. You can provide to this method a WWW::Mechanize object as
+third argument. If not, a new one will be created.
 
 =cut
 
@@ -98,13 +109,49 @@ sub check_balance {
     
     $self->{ua}->follow_link(text_regex => qr/vos\s+comptes/i);
 
-    foreach ( $self->{ua}->links() ) {
-        next unless $_->[0] =~ /mouvements\.cgi/;
-        $self->{ua}->get('https://www.creditmutuel.fr/banque/' . $_->[0]);
-        $self->{ua}->follow_link(text_regex => qw/XP/);
+    # The current page contains a table displaying the accounts and their
+    # balances. 
 
-        push @accounts,
-          Finance::Bank::CreditMut::Account->new( $_->[1], $self->{ua}->content );
+    my $te = new HTML::TableExtract(headers => [
+        q{Pour consulter le détail d'un compte, cliquez sur celui-ci},
+        q{Débit},
+        q{Crédit},
+    ]);
+    $te->parse($self->{ua}->content());
+    for my $ts ( $te->table_states() ) {
+        foreach ( $ts->rows() ) {
+            # The name actually also contains the account number.
+            # Finance::Bank::CreditMutuel::Account::new will take care of
+            # splitting.
+            my ($name, $dept, $asset) = @$_;
+            for ($name, $dept, $asset) {
+                s/^\s+|\s+$//g; # remove leading and trailing whitespace
+                s/\s+/ /g; # collapse all whitespace to one single blank
+            }
+            my $link = $self->{ua}->find_link(text_regex => qr/$name/);
+
+            # we only care about accounts that are displayed with
+            # 'mouvements.cgi' (mortgages use another page that does not
+            # provide CSV downloads. Maybe a future version will handle
+            # this)
+            next unless $link && $link->[0] =~ /mouvements\.cgi/;
+            for ($dept, $asset) {
+                tr/,/./;
+                tr/-+.A-Z0-9//cd;
+            }
+            # Negative and positive balances are displayed in different
+            # columns: take either one and split the currency code at the
+            # same time.
+            my ($balance,$currency) = $dept || $asset =~ /(.*?)([A-Z]+)$/;
+            $balance += 0; # turn string into a number
+            push @accounts, Finance::Bank::CreditMut::Account->new(
+                $name,
+                $currency,
+                $balance,
+                $self->{ua},
+                "https://www.creditmutuel.fr/banque/$$link[0]",
+            );
+        }
     }
     @accounts;
 }
@@ -117,8 +164,8 @@ package Finance::Bank::CreditMut::Account;
 
 =head2 sort_code()
 
-Return the sort code of the account. Currently, it returns an
-undefined value.
+Return the sort code of the account. Currently, it returns an undefined
+value.
 
 =head2 name()
 
@@ -126,40 +173,40 @@ Returns the human-readable name of the account.
 
 =head2 account_no()
 
-Return the account number, in the form C<XXXXXXXXX YY>, where X and Y
-are numbers.
+Return the account number, in the form C<XXXXXXXXX YY>, where X and Y are
+numbers.
 
 =head2 balance()
 
-Returns the balance of the account. Currently, it returns an undefined
-value.
+Returns the balance of the account.
 
 =head2 statements()
 
 Return a list of Statement object (Finance::Bank::CreditMut::Statement).
 
+=head2 currency()
+
+Returns the currency of the account as a three letter ISO code (EUR, CHF,
+etc.)
+
 =cut
 
 sub new {
     my $class = shift;
-    my $name = shift;
+    my ($name, $currency, $balance, $ua, $url) = @_;
     $name =~ /(\d+.\d+)\s+(.*)/ or warn "!!";
     (my $account_no, $name) = ($1, $2);
     $account_no =~ s/\D/ /g; # remove non-breaking space.
-
-    chomp( my @content = split ( /\015\012/, shift ));
-    my $header = shift @content;
-
-    my @statements;
-    push @statements, Finance::Bank::CreditMut::Statement->new($_) foreach @content;
 
     bless {
         name       => $name,
         account_no => $account_no,
         sort_code  => undef,
         date       => undef,
-        balance    => undef,
-        statements => [@statements],
+        balance    => $balance,
+        currency   => $currency,
+        ua         => $ua,
+        url        => $url,
     }, $class;
 }
 
@@ -167,7 +214,21 @@ sub sort_code  { undef }
 sub name       { $_[0]->{name} }
 sub account_no { $_[0]->{account_no} }
 sub balance    { $_[0]->{balance} }
-sub statements { @{ $_[0]->{statements} } }
+sub currency    { $_[0]->{currency} }
+sub statements { 
+
+    my $self = shift;
+
+    @{
+        $self->{statements} ||= do {
+            $self->{ua}->get($self->{url});
+            $self->{ua}->follow_link(text_regex => qr/XP/);
+            chomp(my @content = split /\015\012/, $self->{ua}->content());
+            shift @content;
+            [map Finance::Bank::CreditMut::Statement->new($_), @content];
+        };
+    };
+}
 
 package Finance::Bank::CreditMut::Statement;
 
@@ -186,13 +247,15 @@ Returns a brief description of the statement.
 =head2 amount()
 
 Returns the amount of the statement (expressed in Euros or the account's
-currency).
+currency). Although the Crédit Mutuel website displays number in continental
+format (i.e. with a coma as decimal separator), amount() returns a real
+number.
 
 =head2 as_string($separator)
 
-Returns a tab-delimited representation of the statement. By default, it
-uses a tabulation to separate the fields, but the user can provide its
-own separator.
+Returns a tab-delimited representation of the statement. By default, it uses
+a tabulation to separate the fields, but the user can provide its own
+separator.
 
 =cut
 
@@ -202,10 +265,12 @@ sub new {
 
     my @entry = split ( /;/, $statement );
 
-    $entry[0] =~ s/\d\d(\d\d)$/$1/;
+    $entry[0] =~ s/\d\d(\d\d)$/$1/; # year on 2 digits only
+    # negative number are displayed in a separate column. Move them to the same
+    # one as positive numbers.
     $entry[1] = $entry[2] unless $entry[1] ne '';
     $entry[1] =~ s/,/./;
-    $entry[1] =~ tr/'//d;
+    $entry[1] =~ tr/'//d; # remove thousand separators
     $entry[1] += 0; # turn into a number
 
     bless [ @entry[ 0,3,1 ] ], $class;
@@ -223,14 +288,15 @@ __END__
 
 =head1 COPYRIGHT
 
-Copyright 2002-2003, Cédric Bouvier. All Rights Reserved. This module can
-be redistributed under the same terms as Perl itself.
+Copyright 2002-2003, Cédric Bouvier. All Rights Reserved. This module can be
+redistributed under the same terms as Perl itself.
 
 =head1 AUTHOR
 
-Cédric Bouvier <cbouvi@free.fr>
+Cédric Bouvier <cbouvi@cpan.org>
 
-Thanks to Simon Cozens for releasing Finance::Bank::LloydsTSB and to Briac Pilpré for Finance::Bank::BNPParibas.
+Thanks to Simon Cozens for releasing Finance::Bank::LloydsTSB and to Briac
+Pilpré for Finance::Bank::BNPParibas.
 
 =head1 SEE ALSO
 

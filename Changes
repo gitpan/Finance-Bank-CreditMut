@@ -1,2 +1,9 @@
+0.02 Fri Jun 13 12:26:09 CEST 2003
+     - Added retrieval of account balances.
+     - Retrieval of account statements is now post-poned to the actual call
+       to method statements()
+     - Added method currency() for accounts.
+     - Added comments
+
 0.01 Thu Jun 12 15:03:52 CEST 2003
      - Initial release
