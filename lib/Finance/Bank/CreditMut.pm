@@ -5,10 +5,14 @@ use WWW::Mechanize;
 use HTML::TableExtract;
 use vars qw($VERSION);
 
-$VERSION = 0.03;
+$VERSION = 0.04;
 
-# $Id: CreditMut.pm,v 1.4 2003/08/30 21:08:04 cbouvi Exp $
+# $Id: CreditMut.pm,v 1.5 2003/10/14 21:34:24 cbouvi Exp $
 # $Log: CreditMut.pm,v $
+# Revision 1.5  2003/10/14 21:34:24  cbouvi
+# Hit directly the /comptes/ page, instead of following a link there from the home page. The accounts appear immediately
+# instead of being one click away.
+#
 # Revision 1.4  2003/08/30 21:08:04  cbouvi
 # Changed $VERSION
 #
@@ -94,7 +98,7 @@ sub check_balance {
     my $orig_r;
     my $count = 0;
     {
-        $orig_r = $self->{ua}->get("https://www.creditmutuel.fr");
+        $orig_r = $self->{ua}->get("https://www.creditmutuel.fr/comptes/");
         # loop detected, try again
         ++$count;
         redo unless $orig_r->content || $count > 13;
@@ -113,8 +117,6 @@ sub check_balance {
         croak $click_r->error_as_HTML if $click_r->is_error;
     }   
     
-    $self->{ua}->follow_link(text_regex => qr/vos\s+comptes/i);
-
     # The current page contains a table displaying the accounts and their
     # balances. 
 
