@@ -5,10 +5,13 @@ use WWW::Mechanize;
 use HTML::TableExtract;
 use vars qw($VERSION);
 
-$VERSION = 0.05;
+$VERSION = 0.06;
 
-# $Id: CreditMut.pm,v 1.7 2003/12/09 08:38:40 cbouvi Exp $
+# $Id: CreditMut.pm,v 1.8 2005/03/01 22:57:19 cbouvi Exp $
 # $Log: CreditMut.pm,v $
+# Revision 1.8  2005/03/01 22:57:19  cbouvi
+# New layout of the Credit Mutuel web interface
+#
 # Revision 1.7  2003/12/09 08:38:40  cbouvi
 # Changed $VERSION
 #
@@ -122,14 +125,18 @@ sub check_balance {
         );
         croak $click_r->error_as_HTML if $click_r->is_error;
     }   
+
+    my $r = $self->{ua}->follow_link(url_regex => qr/situation_financiere\.cgi/);
+    croak $r->error_as_HTML if $r->is_error;
     
     # The current page contains a table displaying the accounts and their
     # balances. 
 
     my $te = new HTML::TableExtract(headers => [
-        q{Pour consulter un relevé d'opérations, cliquez sur un compte},
-        q{Débit},
-        q{Crédit},
+        qq{\xa0},
+        q{D.bit},
+        q{Cr.dit},
+        q{Pour information},
     ]);
     $te->parse($self->{ua}->content());
     for my $ts ( $te->table_states() ) {
