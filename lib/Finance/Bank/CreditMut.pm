@@ -5,10 +5,16 @@ use WWW::Mechanize;
 use HTML::TableExtract;
 use vars qw($VERSION);
 
-$VERSION = 0.02;
+$VERSION = 0.03;
 
-# $Id: CreditMut.pm,v 1.2 2003/06/13 10:13:59 cbouvi Exp $
+# $Id: CreditMut.pm,v 1.4 2003/08/30 21:08:04 cbouvi Exp $
 # $Log: CreditMut.pm,v $
+# Revision 1.4  2003/08/30 21:08:04  cbouvi
+# Changed $VERSION
+#
+# Revision 1.3  2003/08/30 21:07:10  cbouvi
+# Changed the parsing of CSV data to accomodate the new Value Date column
+#
 # Revision 1.2  2003/06/13 10:13:59  cbouvi
 # Added retrieval of account balances.
 # Retrieval of account statements is now post-poned to the actual call to
@@ -268,12 +274,12 @@ sub new {
     $entry[0] =~ s/\d\d(\d\d)$/$1/; # year on 2 digits only
     # negative number are displayed in a separate column. Move them to the same
     # one as positive numbers.
-    $entry[1] = $entry[2] unless $entry[1] ne '';
-    $entry[1] =~ s/,/./;
-    $entry[1] =~ tr/'//d; # remove thousand separators
-    $entry[1] += 0; # turn into a number
+    $entry[2] = $entry[3] unless $entry[2] ne '';
+    $entry[2] =~ s/,/./;
+    $entry[2] =~ tr/'//d; # remove thousand separators
+    $entry[2] += 0; # turn into a number
 
-    bless [ @entry[ 0,3,1 ] ], $class;
+    bless [ @entry[ 0,4,2 ] ], $class;
 }
 
 sub date        { $_[0]->[0] }

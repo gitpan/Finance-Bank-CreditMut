@@ -1,3 +1,7 @@
+0.03 Sat Aug 30 23:09:07 CEST 2003
+     - Changed the parsing of CSV data to accomodate the new Value Date
+       column
+
 0.02 Fri Jun 13 12:26:09 CEST 2003
      - Added retrieval of account balances.
      - Retrieval of account statements is now post-poned to the actual call
