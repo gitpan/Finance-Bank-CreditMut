@@ -5,10 +5,16 @@ use WWW::Mechanize;
 use HTML::TableExtract;
 use vars qw($VERSION);
 
-$VERSION = 0.04;
+$VERSION = 0.05;
 
-# $Id: CreditMut.pm,v 1.5 2003/10/14 21:34:24 cbouvi Exp $
+# $Id: CreditMut.pm,v 1.7 2003/12/09 08:38:40 cbouvi Exp $
 # $Log: CreditMut.pm,v $
+# Revision 1.7  2003/12/09 08:38:40  cbouvi
+# Changed $VERSION
+#
+# Revision 1.6  2003/12/09 08:37:58  cbouvi
+# CMut once again changed the wording on their site
+#
 # Revision 1.5  2003/10/14 21:34:24  cbouvi
 # Hit directly the /comptes/ page, instead of following a link there from the home page. The accounts appear immediately
 # instead of being one click away.
@@ -121,7 +127,7 @@ sub check_balance {
     # balances. 
 
     my $te = new HTML::TableExtract(headers => [
-        q{Pour consulter le détail d'un compte, cliquez sur celui-ci},
+        q{Pour consulter un relevé d'opérations, cliquez sur un compte},
         q{Débit},
         q{Crédit},
     ]);
