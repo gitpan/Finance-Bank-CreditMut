@@ -5,10 +5,10 @@ use WWW::Mechanize;
 use HTML::TableExtract;
 use vars qw($VERSION);
 
-$VERSION = 0.06;
+$VERSION = 0.07;
 
-# $Id: CreditMut.pm,v 1.8 2005/03/01 22:57:19 cbouvi Exp $
-# $Log: CreditMut.pm,v $
+# $Id: CreditMut.pm 151 2006-05-28 19:29:59Z cbouvi $
+# $Log$
 # Revision 1.8  2005/03/01 22:57:19  cbouvi
 # New layout of the Credit Mutuel web interface
 #
@@ -133,7 +133,7 @@ sub check_balance {
     # balances. 
 
     my $te = new HTML::TableExtract(headers => [
-        qq{\xa0},
+        q{Compte},
         q{D.bit},
         q{Cr.dit},
         q{Pour information},
