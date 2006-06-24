@@ -5,9 +5,9 @@ use WWW::Mechanize;
 use HTML::TableExtract;
 use vars qw($VERSION);
 
-$VERSION = 0.07;
+$VERSION = 0.08;
 
-# $Id: CreditMut.pm 151 2006-05-28 19:29:59Z cbouvi $
+# $Id: CreditMut.pm 156 2006-06-24 22:08:28Z cbouvi $
 # $Log$
 # Revision 1.8  2005/03/01 22:57:19  cbouvi
 # New layout of the Credit Mutuel web interface
@@ -284,17 +284,17 @@ sub new {
     my $class     = shift;
     my $statement = shift;
 
-    my @entry = split ( /;/, $statement );
+    my ($date, undef, $withdrawal, $deposit, $comment) = split /;/, $statement;
 
-    $entry[0] =~ s/\d\d(\d\d)$/$1/; # year on 2 digits only
+    $date =~ s/\d\d(\d\d)$/$1/; # year on 2 digits only
     # negative number are displayed in a separate column. Move them to the same
     # one as positive numbers.
-    $entry[2] = $entry[3] unless $entry[2] ne '';
-    $entry[2] =~ s/,/./;
-    $entry[2] =~ tr/'//d; # remove thousand separators
-    $entry[2] += 0; # turn into a number
+    my $amount = $withdrawal || $deposit || 0;
+    $amount =~ s/,/./;
+    $amount =~ tr/'//d; # remove thousand separators
+    $amount += 0; # turn into a number
 
-    bless [ @entry[ 0,4,2 ] ], $class;
+    bless [ $date, $comment, $amount ], $class;
 }
 
 sub date        { $_[0]->[0] }
