@@ -5,36 +5,7 @@ use WWW::Mechanize;
 use HTML::TableExtract;
 use vars qw($VERSION);
 
-$VERSION = 0.08;
-
-# $Id: CreditMut.pm 156 2006-06-24 22:08:28Z cbouvi $
-# $Log$
-# Revision 1.8  2005/03/01 22:57:19  cbouvi
-# New layout of the Credit Mutuel web interface
-#
-# Revision 1.7  2003/12/09 08:38:40  cbouvi
-# Changed $VERSION
-#
-# Revision 1.6  2003/12/09 08:37:58  cbouvi
-# CMut once again changed the wording on their site
-#
-# Revision 1.5  2003/10/14 21:34:24  cbouvi
-# Hit directly the /comptes/ page, instead of following a link there from the home page. The accounts appear immediately
-# instead of being one click away.
-#
-# Revision 1.4  2003/08/30 21:08:04  cbouvi
-# Changed $VERSION
-#
-# Revision 1.3  2003/08/30 21:07:10  cbouvi
-# Changed the parsing of CSV data to accomodate the new Value Date column
-#
-# Revision 1.2  2003/06/13 10:13:59  cbouvi
-# Added retrieval of account balances.
-# Retrieval of account statements is now post-poned to the actual call to
-# method statements()
-# Added method currency() for accounts.
-# Added comments
-#
+$VERSION = 0.09;
 
 =pod
 
@@ -170,7 +141,7 @@ sub check_balance {
                 $currency,
                 $balance,
                 $self->{ua},
-                "https://www.creditmutuel.fr/banque/$$link[0]",
+		$self->{ua}->base . q{/../} . $link->[0],
             );
         }
     }

@@ -1,3 +1,7 @@
+0.09 Thu Nov 16 23:28:05 CET 2006
+     - Credit Mutuel have yet again slightly changed their interface. Movements
+       are now retrieved from the regional subsidiary instead of the root site.
+
 0.08 Sun Jun 25 00:05:04 CEST 2006
      - statements never have an undefined amount (empty ones are turned into
        zeros)
