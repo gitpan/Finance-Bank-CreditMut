@@ -5,7 +5,7 @@ use WWW::Mechanize;
 use HTML::TableExtract;
 use vars qw($VERSION);
 
-$VERSION = 0.09;
+$VERSION = 0.10;
 
 =pod
 
@@ -107,7 +107,6 @@ sub check_balance {
         q{Compte},
         q{D.bit},
         q{Cr.dit},
-        q{Pour information},
     ]);
     $te->parse($self->{ua}->content());
     for my $ts ( $te->table_states() ) {

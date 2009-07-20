@@ -1,3 +1,7 @@
+0.10 Mon Jul 20 20:28:36 CEST 2009
+     - Credit Mutuel have yet again slightly changed their interface. The
+       summary page no longer gives the amounts translated into French francs.
+
 0.09 Thu Nov 16 23:28:05 CET 2006
      - Credit Mutuel have yet again slightly changed their interface. Movements
        are now retrieved from the regional subsidiary instead of the root site.
