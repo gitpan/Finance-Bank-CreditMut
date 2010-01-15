@@ -1,3 +1,8 @@
+0.11 Wed Dec 30 11:26:36 CET 2009
+     - Credit Mutuel changed the way they print the account numbers; they are
+       now prefixed with the agency number, i.e., NNNNN XXXXXXXXX YY, instead
+       of just XXXXXXXXX YY. We stay consistent by trimming this out.
+
 0.10 Mon Jul 20 20:28:36 CEST 2009
      - Credit Mutuel have yet again slightly changed their interface. The
        summary page no longer gives the amounts translated into French francs.

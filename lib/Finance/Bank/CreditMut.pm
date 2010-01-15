@@ -5,7 +5,7 @@ use WWW::Mechanize;
 use HTML::TableExtract;
 use vars qw($VERSION);
 
-$VERSION = 0.10;
+$VERSION = 0.11;
 
 =pod
 
@@ -185,9 +185,10 @@ etc.)
 sub new {
     my $class = shift;
     my ($name, $currency, $balance, $ua, $url) = @_;
-    $name =~ /(\d+.\d+)\s+(.*)/ or warn "!!";
+    $name =~ /(\d+.\d+(?:.\d+)?)\s+(.*)/ or warn "!!";
     (my $account_no, $name) = ($1, $2);
     $account_no =~ s/\D/ /g; # remove non-breaking space.
+    $account_no =~ s/^\d+.//; # remove leading agency number
 
     bless {
         name       => $name,
