@@ -5,7 +5,7 @@ use WWW::Mechanize;
 use HTML::TableExtract;
 use vars qw($VERSION);
 
-$VERSION = 0.11;
+$VERSION = 0.12;
 
 =pod
 
@@ -78,7 +78,7 @@ sub check_balance {
     my $orig_r;
     my $count = 0;
     {
-        $orig_r = $self->{ua}->get("https://www.creditmutuel.fr/comptes/");
+        $orig_r = $self->{ua}->get("https://www.creditmutuel.fr/");
         # loop detected, try again
         ++$count;
         redo unless $orig_r->content || $count > 13;
